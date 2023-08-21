@@ -5,6 +5,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 import static edu.kh.jdbc.common.JDBCTemplate.*;
 
@@ -133,5 +135,101 @@ public class MainDAO {
 		
 		return 0;
 	}
+
+
+	public List<Member> loginSelect(Connection conn) {
+		// TODO Auto-generated method stub
+	List<Member> list = new ArrayList<Member>();
+		
+		try {
+			
+			String sql = prop.getProperty("loginSelect");
+			
+			// Statement 객체 생성
+			
+			stmt = conn.createStatement();
+			
+			// SQL을 수행 후 결과(ResultSet) 반환 받음
+			rs = stmt.executeQuery(sql);
+			
+			// 조회 결과를 얻어와 한 행씩 접근하여
+			// Employee 객체 생성 후 컬럼값 담기
+			// -> List 추가
+			while(rs.next()) {
+				
+				int memberNo = rs.getInt("EMP_ID");	
+				String memberId = rs.getString("EMP_NAME");
+				String memberPw = rs.getString("EMP_NO");
+				String meberName = rs.getString("EMAIL");
+				String meberGender = rs.getString("PHONE");
+				String enrollDate = rs.getString("DEPT_TITLE");
+				
+				Member mem = new Member( memberNo,memberId, memberPw,meberName,meberGender,enrollDate);
+				
+				list.add(mem); // List 담기
+			
+			} // while문 종료
+			
+			
+		} finally {
+			
+			close(stmt);
+			
+		}
+		
+		// 결과 반환
+		return empList;
+		
+		
+	}
+
+
+	public int idDuplicationCheck(Connection conn,String memberId ) throws Exception{
+		// TODO Auto-generated method stub
+		
+		int result = 0;
+		try {
+			
+			String sql = prop.getProperty("idDuplicationCheck");
+			
+			pstmt = conn.prepareStatement(sql);
+			pstmt.setString(1, memberId);
+			pstmt.setString(2, memberPw);
+			
+			rs = pstmt.executeQuery();
+			
+			if(rs.next()) {
+				result =rs.getInt(1);
+				
+			}finally {
+				close(rs);
+				close(pstmt);
+				
+			}
+					
+			
+		}finally {
+			
+			
+		}
+		
+		
+		
+		return 0;
+	}
+		
+		try {
+			
+			pstmt.setString(1,member.getMemberId());
+			
+			result = pstmt.executeUpdate();
+			
+			
+			String sql = prop.getProperty("signUp");
+		} finaly{ 
+			
+		}
+		
+	
 
 }
