@@ -8,28 +8,28 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
-
 import static edu.kh.jdbc.common.JDBCTemplate.*;
 import edu.kh.jdbc.member.model.dto.Member;
 
 public class MemberDAO {
 	
+	
 	// JDBC 객체 참조 변수
 	private Statement stmt;
 	private PreparedStatement pstmt;
-	private ResultSet rs = null;
+	private ResultSet rs;
 	
 	// xml에 작성된 SQL을 읽어와 저장할 객체 참조변수
 	private Properties prop;
 	
-	// 기본 생성자로 객체 생성시 XML 읽어오기 
+	// 기본생성자로 객체 생성 시 XML 읽어오기
 	public MemberDAO() {
 		try {
-			
 			prop = new Properties();
-			prop.loadFromXML( new FileInputStream("member-sql.xml") );
 			
-		}catch(Exception e) {
+			prop.loadFromXML(new FileInputStream("member-sql.xml"));
+			
+		} catch(Exception e) {
 			e.printStackTrace();
 		}
 		
@@ -38,10 +38,13 @@ public class MemberDAO {
 	
 	
 
-	public List<Member> selectMemberList(Connection conn) throws Exception {
-		// TODO Auto-generated method stub
+	/** 회원 목록 조회 SQL 수행
+	 * @param conn
+	 * @return
+	 */
+	public List<Member> selectMemberList(Connection conn) throws Exception{
 		
-		// 결과 저장용 변수 선언
+		// 결과 저장용 변수 선언 
 		List<Member> memberList = new ArrayList<Member>();
 		
 		try {
@@ -53,34 +56,137 @@ public class MemberDAO {
 			rs = stmt.executeQuery(sql);
 			
 			while(rs.next()) {
+				
 				String memberId = rs.getString("MEMBER_ID");
 				String memberName = rs.getString("MEMBER_NM");
 				String memberGender = rs.getString("성별");
 				
 				Member member = new Member();
-				
 				member.setMemberId(memberId);
 				member.setMemberName(memberName);
-				member.setMemberGender(memberGender);				
+				member.setMemberGender(memberGender);
 				
 				memberList.add(member);
-				
 			}
 			
 			
-		}finally {
+		} finally {
 			close(rs);
 			close(stmt);
-			
 		}
 		
 		
 		return memberList;
 	}
+
+
+
+	/** 회원 정보 수정 SQL 수행
+	 * @param conn
+	 * @param memberName
+	 * @param memberGender
+	 * @param memberNo
+	 * @return
+	 */
+	public int updateMember(Connection conn, String memberName, 
+				String memberGender, int memberNo) throws Exception{
+		
+		int result = 0;
+		
+		try {
+			String sql = prop.getProperty("updateMember");
+			
+			pstmt = conn.prepareStatement(sql);
+			
+			pstmt.setString(1, memberName);
+			pstmt.setString(2, memberGender);
+			pstmt.setInt(3, memberNo);
+			
+			result = pstmt.executeUpdate();
+			
+			
+		} finally {
+			close(pstmt);
+		}
+		
+		
+		return result;
+	}
+
+
+
+	/** 비밀번호 변경
+	 * @param current
+	 * @param newPw1
+	 * @param memberNo
+	 * @return
+	 */
+	public int updatePassword(Connection conn, String current, String newPw1, int memberNo) throws Exception {
+		// TODO Auto-generated method stub
+		int result = 0;
+		
+		try {
+			
+			String sql=prop.getProperty("updatePassword");
+			
+			pstmt = conn.prepareStatement(sql);
+			
+			pstmt.setString(1, newPw1);
+			pstmt.setString(2, current);
+			pstmt.setInt(3, memberNo);
+			
+			result =pstmt.executeUpdate();
+			
+		}finally {
+			
+			close(pstmt);
+		}
+		
+		
+		return result;
+	}
+
+
+
+	/**
+	 * @param conn
+	 * @param memberPw
+	 * @param memberNo
+	 * @return
+	 */
+	public int unRegisterMember(Connection conn, String memberPw, int memberNo) throws Exception{
+		// TODO Auto-generated method stub
+		int result = 0;
+		
+		try {
+			
+			String sql=prop.getProperty("unRegisterMember");
+			
+			pstmt = conn.prepareStatement(sql);
+			
+			pstmt.setInt(1, memberNo);
+			pstmt.setString(2, memberPw);
+			
+			result =pstmt.executeUpdate();
+			
+		}finally {
+			
+			close(pstmt);
+			
+		}
+		
+		
+		return 0;
+	}
+
 	
-
-	 
-
+	
+	
+	
+	
+	
+	
+	
 	
 	
 }

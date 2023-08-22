@@ -5,8 +5,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Properties;
 import static edu.kh.jdbc.common.JDBCTemplate.*;
 
@@ -14,222 +12,171 @@ import edu.kh.jdbc.member.model.dto.Member;
 
 public class MainDAO {
 	
-	// 필드 
-	// JDBC 객체 참조 변수
-	private Statement stmt; // SQl 수행 결과 반환
-	private PreparedStatement pstmt; // placeholder를 포함한 SQL 세팅/ 수행
-	private ResultSet rs; // Select 수행 결과 저장
-
-	private Properties prop;
-	// map<String String> 형태
-	// XML 파일 입출력 메서드 제공
+	// 필드
+	// JDBC 객체 참조 변수 
+	private Statement stmt; // SQL 수행, 결과 반환
+	private PreparedStatement pstmt; // placeholder를 포함한 SQL 세팅/수행
+	private ResultSet rs; // SELECT 수행 결과 저장
 	
-	//
+	private Properties prop;
+	// - Map<String, String> 형태
+	// - XML 파일 입/출력 메서드를 제공
+	
+	// 기본생성자
 	public MainDAO() {
 		
-		// DAO 객체가 생성될 때 xml 파일을 읽어와  PRO 객체에 저장
-		
+		// DAO 객체가 생성될때 Xml 파일을 읽어와 Properties 객체에 저장
 		try {
-			prop= new  Properties();
-					prop.loadFromXML(new FileInputStream("main-sql.xml"));
+			prop = new Properties();
+			prop.loadFromXML( new FileInputStream("main-sql.xml") );
 			
-					// -> prop.getPropertry("key") 호출
-					// -> value(SQL) 반환
-					
-					
+			// -> prop.getProperty("key") 호출
+			// --> value (SQL) 반환
 			
-		}catch(Exception e) {
+		} catch(Exception e) {
 			e.printStackTrace();
-			
 		}
 		
-		
-	} 
+	}
 	
-	
-	/** 로그인 DAO(아이디, 비밀번호 일치 회원 조회)
+
+	/** 로그인 DAO (아이디, 비밀번호 일치 회원 조회)
 	 * @param conn
 	 * @param memberId
 	 * @param memberPw
 	 * @return
 	 */
 	public Member login(Connection conn, String memberId, String memberPw) throws Exception {
-		// TODO Auto-generated method stub
 		
-		// 1. 결과 저장용 변수 선언 
+		// 1. 결과 저장용 변수 선언
 		Member member = null;
 		
 		try {
-			// 2. SQL 작성후 수행
 			
+			//2. SQL 작성 후 수행
 			String sql = prop.getProperty("login");
-			
+			/*
+			 * SELECT MEMBER_NO, MEMBER_ID, MEMBER_NM, MEMBER_GENDER,
+				TO_CHAR(ENROLL_DT, 'YYYY"년" MM"월" DD"일" HH24:MI:SS') ENROLL_DT
+				FROM MEMBER
+				WHERE MEMBER_ID = ?
+				AND MEMBER_PW = ?
+				AND UNREGISTER_FL = 'N'
+			 * */
 			
 			pstmt = conn.prepareStatement(sql);
 			
-			// placeholder 에 알맞은 값 대입
+			// placeholder에 알맞은값 대입
 			pstmt.setString(1, memberId);
 			pstmt.setString(2, memberPw);
 			
-			rs = pstmt.executeQuery(); // SELCET 수행 후 결과 반환 받기
+			rs = pstmt.executeQuery(); // SELECT 수행 후 결과 반환 받기
 			
-			// 3. 조회 결과를 1행씩 접근해서 얻어오기 
+			// 3. 조회 결과를 1행씩 접근해서 얻어오기
 			if(rs.next()) {
-				int memberNO = rs.getInt("MEMBER_NO");
+				int memberNo = rs.getInt("MEMBER_NO");
 				
-				// memberId = rs.getSTring("MEMBER_NO");
-				// 입력 받은 아이디 == 조회한 아이디 
-				// DB에서 얻어올 필요가 없음 
+				//String memberId = rs.getString("MEMBER_ID");
+				// 입력 받은 아이디 == 조회한 아이디
+				// -> DB에서 얻어올 필요가 없음
 				
 				String memberName = rs.getString("MEMBER_NM");
 				String memberGender = rs.getString("MEMBER_GENDER");
 				String enrollDate = rs.getString("ENROLL_DT");
 				
-				// Member 객체 생성 후 값 세팅
+				//Member 객체 생성 후 값 세팅
 				member = new Member();
 				
-				member.setMemberNo(memberNO);
+				member.setMemberNo(memberNo);
 				member.setMemberId(memberId);
-				member.setMeberName(memberName);
-				member.setMeberGender(memberGender);
+				member.setMemberName(memberName);
+				member.setMemberGender(memberGender);
 				member.setEnrollDate(enrollDate);
 				
 			}
 			
 			
-			
-			
-			
-		}finally{
-			// 4. 사용한 JDBC 객체 자원 반환 
+		} finally {
+			// 4. 사용한 JDBC 객체 자원 반환
 			close(rs);
 			close(pstmt);
+			
 		}
-		
-		
+		// 5. 결과반환
 		return member;
 	}
 
 
-	public int signUp(Connection conn, Member emp) throws Exception {
-		// TODO Auto-generated method stub
-		int result = 0;
-		try {
-			
-	           String sql = prop.getProperty("signUp");
-	           
-	           pstmt = conn.prepareStatement(sql);
-	           
-			
-			
-			
-		}finally {
-			
-			
-		}
-		
-		
-		
-		
-		
-		
-		return 0;
-	}
-
-
-	public List<Member> loginSelect(Connection conn) {
-		// TODO Auto-generated method stub
-	List<Member> list = new ArrayList<Member>();
-		
-		try {
-			
-			String sql = prop.getProperty("loginSelect");
-			
-			// Statement 객체 생성
-			
-			stmt = conn.createStatement();
-			
-			// SQL을 수행 후 결과(ResultSet) 반환 받음
-			rs = stmt.executeQuery(sql);
-			
-			// 조회 결과를 얻어와 한 행씩 접근하여
-			// Employee 객체 생성 후 컬럼값 담기
-			// -> List 추가
-			while(rs.next()) {
-				
-				int memberNo = rs.getInt("EMP_ID");	
-				String memberId = rs.getString("EMP_NAME");
-				String memberPw = rs.getString("EMP_NO");
-				String meberName = rs.getString("EMAIL");
-				String meberGender = rs.getString("PHONE");
-				String enrollDate = rs.getString("DEPT_TITLE");
-				
-				Member mem = new Member( memberNo,memberId, memberPw,meberName,meberGender,enrollDate);
-				
-				list.add(mem); // List 담기
-			
-			} // while문 종료
-			
-			
-		} finally {
-			
-			close(stmt);
-			
-		}
-		
-		// 결과 반환
-		return empList;
-		
-		
-	}
-
-
-	public int idDuplicationCheck(Connection conn,String memberId ) throws Exception{
-		// TODO Auto-generated method stub
+	/**  아이디 중복 검사 DAO
+	 * @param conn
+	 * @param memberId
+	 * @return
+	 */
+	public int idDuplicationCheck(Connection conn, String memberId) throws Exception{
 		
 		int result = 0;
+		
 		try {
-			
 			String sql = prop.getProperty("idDuplicationCheck");
 			
-			pstmt = conn.prepareStatement(sql);
+			pstmt = conn.prepareStatement(sql);    
 			pstmt.setString(1, memberId);
-			pstmt.setString(2, memberPw);
 			
 			rs = pstmt.executeQuery();
 			
 			if(rs.next()) {
-				result =rs.getInt(1);
-				
-			}finally {
-				close(rs);
-				close(pstmt);
-				
+				result = rs.getInt(1);
 			}
-					
 			
-		}finally {
-			
-			
+		} finally {
+			close(rs);
+			close(pstmt);
 		}
 		
-		
-		
-		return 0;
+		return result;
 	}
+
+
+	/** 회원 가입 SQL 수행( INSERT )
+	 * @param conn
+	 * @param member
+	 * @return
+	 */
+	public int signUp(Connection conn, Member member) throws Exception{
+		
+		int result = 0;
 		
 		try {
+			String sql = prop.getProperty("signUp");
 			
-			pstmt.setString(1,member.getMemberId());
+			pstmt = conn.prepareStatement(sql);
+			
+			pstmt.setString(1, member.getMemberId());
+			pstmt.setString(2, member.getMemberPw());
+			pstmt.setString(3, member.getMemberName());
+			pstmt.setString(4, member.getMemberGender());
 			
 			result = pstmt.executeUpdate();
 			
 			
-			String sql = prop.getProperty("signUp");
-		} finaly{ 
 			
+		} finally {
+			close(pstmt);
 		}
 		
-	
+		
+		return result;
+	}
 
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 }
